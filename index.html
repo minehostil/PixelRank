@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Generador de rangos pixel art</title>
+<title>Generador de tags pixel art</title>
 <style>
 :root{
   --bg:#1c1c1e; --panel:#262628; --panel-2:#2e2e31; --line:#3b3b40;
@@ -78,6 +78,26 @@ input[type=range]::-moz-range-thumb{width:18px;height:18px;border-radius:50%;bac
 select,textarea,input[type=number]{background:var(--ctl);border:1px solid transparent;border-radius:8px;padding:8px 10px;width:100%}
 select{appearance:none;background-image:linear-gradient(45deg,transparent 50%,#c3c3c9 50%),linear-gradient(135deg,#c3c3c9 50%,transparent 50%);background-position:calc(100% - 17px) 55%,calc(100% - 12px) 55%;background-size:5px 5px;background-repeat:no-repeat;padding-right:30px}
 textarea{resize:vertical;min-height:64px;font-family:ui-monospace,"SF Mono",Menlo,Consolas,monospace}
+/* selector de color propio */
+.cbtn{width:44px;height:32px;padding:0;border:2px solid var(--ctl-hover);border-radius:8px;cursor:pointer;flex:none;background-clip:padding-box}
+.cbtn:hover{border-color:var(--ink-2)}
+dialog#cp{background:var(--panel);border:1px solid var(--line);border-radius:20px;width:min(320px,92vw);padding:0;color:var(--ink)}
+body.lock{position:fixed;left:0;right:0;width:100%;overflow:hidden}
+dialog{overscroll-behavior:contain}
+dialog#cp{touch-action:none}
+dialog#cp #cpHex{touch-action:manipulation}
+dialog#cp::backdrop{background:rgba(0,0,0,.65);backdrop-filter:blur(4px)}
+.cp{padding:16px;display:flex;flex-direction:column;gap:10px}
+.cp-top{display:flex;gap:12px;height:180px}
+.cp-area{position:relative;flex:1;border-radius:12px;touch-action:none;cursor:crosshair;outline-offset:3px}
+.cp-hue{position:relative;width:32px;border-radius:12px;touch-action:none;cursor:ns-resize;background:linear-gradient(to bottom,#f00 0%,#ff0 17%,#0f0 33%,#0ff 50%,#00f 67%,#f0f 83%,#f00 100%);outline-offset:3px}
+.cp-thumb{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 1px rgba(0,0,0,.35),inset 0 0 0 1px rgba(0,0,0,.25);pointer-events:none}
+.cp-hue .cp-thumb{left:50%}
+.cp-lab{text-align:center;font-size:12px;letter-spacing:.04em;text-transform:uppercase;color:var(--ink-2);margin-top:2px}
+#cpHex{background:var(--bg);border:1px solid var(--line);border-radius:12px;text-align:center;font-size:17px;letter-spacing:.08em;padding:11px 10px;text-transform:uppercase;color:var(--ink)}
+.cp-prev{height:32px;border-radius:12px}
+.cp-save{background:var(--hi);color:var(--hi-ink);border:0;border-radius:14px;padding:13px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;cursor:pointer;margin-top:2px}
+.cp-save:hover{background:#fff}
 input[type=color]{-webkit-appearance:none;appearance:none;width:44px;height:32px;padding:0;border:2px solid var(--ctl-hover);border-radius:8px;background:none;cursor:pointer}
 input[type=color]::-webkit-color-swatch-wrapper{padding:0}
 input[type=color]::-webkit-color-swatch{border:0;border-radius:5px}
@@ -169,6 +189,19 @@ dialog::backdrop{background:rgba(0,0,0,.6)}
       <span class="grow"></span>
       <button class="btn" id="cfgClose" type="button">Cerrar</button>
     </div>
+  </div>
+</dialog>
+<dialog id="cp" aria-label="Selector de color">
+  <div class="cp">
+    <div class="cp-top">
+      <div class="cp-area" id="cpArea" tabindex="0" role="slider" aria-label="Saturación y brillo"><div class="cp-thumb" id="cpAreaT"></div></div>
+      <div class="cp-hue" id="cpHue" tabindex="0" role="slider" aria-label="Tono" aria-valuemin="0" aria-valuemax="360"><div class="cp-thumb" id="cpHueT"></div></div>
+    </div>
+    <div class="cp-lab">Código hex manual</div>
+    <input id="cpHex" type="text" maxlength="7" spellcheck="false" autocomplete="off" aria-label="Código hex">
+    <div class="cp-lab">Previsualización del color</div>
+    <div class="cp-prev" id="cpPrev"></div>
+    <button class="cp-save" id="cpSave" type="button">Guardar color</button>
   </div>
 </dialog>
 <div id="toast" hidden></div>
@@ -383,7 +416,7 @@ const DEF = () => ({
   tol: { th: 0, asym: false, t: [1, 1, 1, 1], color: '#000000', tr: 0, wrap: false },
   out: { res: 1, scaleFx: true },
   pad: { asym: false, h: 3, v: 2, t: 2, r: 3, b: 2, l: 3 },
-  bcol: mkGrad(['#6b7cff', '#2b2f8c'], 'v'),
+  bcol: mkGrad(['#6ee7a0', '#14532d'], 'v'),
   bsh: { pos: 'off', ovTr: 0, match: false, dist: 1, len: 0, color: '#000000', tr: 50 },
   bol: { th: 1, asym: false, t: [1, 1, 1, 1], place: 'in', perSide: false, color: '#000000', tr: 50, sc: [sc('#000000', 50), sc('#000000', 50), sc('#000000', 50), sc('#000000', 50)], corner: false },
   emb: { th: 0, asym: false, t: [1, 1, 1, 1], place: 'in', custom: false, sc: [sc('#ffffff', 30), sc('#000000', 30), sc('#000000', 30), sc('#ffffff', 30)], corner: false },
@@ -765,6 +798,77 @@ function draw() {
 }
 window.addEventListener('resize', queue);
 
+/* ============ selector de color propio ============ */
+const CP = { h: 0, s: 1, v: 1, cb: null };
+function hsv2rgb(h, s, v) {
+  const f = n => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
+  return [f(5) * 255, f(3) * 255, f(1) * 255];
+}
+function rgb2hsv(r, g, b) {
+  r /= 255; g /= 255; b /= 255;
+  const mx = Math.max(r, g, b), mn = Math.min(r, g, b), d = mx - mn; let h = 0;
+  if (d) { if (mx === r) h = ((g - b) / d) % 6; else if (mx === g) h = (b - r) / d + 2; else h = (r - g) / d + 4; h *= 60; if (h < 0) h += 360; }
+  return [h, mx ? d / mx : 0, mx];
+}
+const toHex = (r, g, b) => '#' + [r, g, b].map(x => Math.round(x).toString(16).padStart(2, '0')).join('');
+const cpHex = () => toHex(...hsv2rgb(CP.h, CP.s, CP.v));
+function cpRender(keepInput) {
+  $('#cpArea').style.background = `linear-gradient(to top,#000,rgba(0,0,0,0)),linear-gradient(to right,#fff,hsl(${CP.h},100%,50%))`;
+  $('#cpAreaT').style.left = CP.s * 100 + '%'; $('#cpAreaT').style.top = (1 - CP.v) * 100 + '%';
+  $('#cpHueT').style.top = CP.h / 360 * 100 + '%';
+  $('#cpHue').setAttribute('aria-valuenow', Math.round(CP.h));
+  const hx = cpHex();
+  $('#cpAreaT').style.background = hx; $('#cpHueT').style.background = `hsl(${CP.h},100%,50%)`;
+  $('#cpPrev').style.background = hx;
+  if (!keepInput) $('#cpHex').value = hx.toUpperCase();
+}
+let lockY = 0;
+function lockBody() { if (document.body.classList.contains('lock')) return; lockY = window.scrollY; document.body.style.top = -lockY + 'px'; document.body.classList.add('lock'); }
+function unlockBody() { if (!document.body.classList.contains('lock')) return; document.body.classList.remove('lock'); document.body.style.top = ''; window.scrollTo(0, lockY); }
+function openPicker(hex, cb) {
+  CP.cb = cb; const [r, g, b] = hexRGB(hex); [CP.h, CP.s, CP.v] = rgb2hsv(r, g, b);
+  cpRender(); lockBody(); $('#cp').showModal();
+}
+function colorBtn(label, onPick) {
+  const b = el('button', 'cbtn'); b.type = 'button'; b.setAttribute('aria-label', label);
+  let val = '#000000';
+  b.set = h => { val = h; b.style.background = h; };
+  b.addEventListener('click', () => openPicker(val, h => { b.set(h); onPick(h); }));
+  return b;
+}
+(function initPicker() {
+  const drag = (node, fn) => {
+    node.addEventListener('pointerdown', e => {
+      e.preventDefault(); node.setPointerCapture(e.pointerId); node.focus(); fn(e);
+      const mv = ev => fn(ev), up = () => { node.removeEventListener('pointermove', mv); node.removeEventListener('pointerup', up); };
+      node.addEventListener('pointermove', mv); node.addEventListener('pointerup', up);
+    });
+  };
+  const area = $('#cpArea'), hue = $('#cpHue');
+  drag(area, e => { const r = area.getBoundingClientRect(); CP.s = clamp((e.clientX - r.left) / r.width, 0, 1); CP.v = 1 - clamp((e.clientY - r.top) / r.height, 0, 1); cpRender(); });
+  drag(hue, e => { const r = hue.getBoundingClientRect(); CP.h = clamp((e.clientY - r.top) / r.height, 0, 1) * 360; cpRender(); });
+  area.addEventListener('keydown', e => {
+    const st = e.shiftKey ? 0.1 : 0.02, k = e.key;
+    if (k === 'ArrowLeft') CP.s = clamp(CP.s - st, 0, 1); else if (k === 'ArrowRight') CP.s = clamp(CP.s + st, 0, 1);
+    else if (k === 'ArrowUp') CP.v = clamp(CP.v + st, 0, 1); else if (k === 'ArrowDown') CP.v = clamp(CP.v - st, 0, 1); else return;
+    e.preventDefault(); cpRender();
+  });
+  hue.addEventListener('keydown', e => {
+    const st = e.shiftKey ? 20 : 4;
+    if (e.key === 'ArrowUp' || e.key === 'ArrowLeft') CP.h = clamp(CP.h - st, 0, 360); else if (e.key === 'ArrowDown' || e.key === 'ArrowRight') CP.h = clamp(CP.h + st, 0, 360); else return;
+    e.preventDefault(); cpRender();
+  });
+  $('#cpHex').addEventListener('input', e => {
+    let v = e.target.value.trim(); if (v && v[0] !== '#') v = '#' + v;
+    if (/^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(v)) { const [r, g, b] = hexRGB(v.toLowerCase()); [CP.h, CP.s, CP.v] = rgb2hsv(r, g, b); cpRender(true); }
+  });
+  $('#cpHex').addEventListener('keydown', e => { if (e.key === 'Enter') $('#cpSave').click(); });
+  $('#cpSave').addEventListener('click', () => { const h = cpHex(); $('#cp').close(); if (CP.cb) CP.cb(h); });
+  $('#cp').addEventListener('close', unlockBody);
+  $('#cp').addEventListener('touchmove', e => { if (e.target.id !== 'cpHex') e.preventDefault(); }, { passive: false });
+  $('#cp').addEventListener('click', e => { if (e.target === $('#cp')) $('#cp').close(); });
+})();
+
 /* ============ controles ============ */
 const CTL = [];
 const reg = c => { CTL.push(c); return c.el; };
@@ -801,14 +905,13 @@ function cCheck(k, label, o = {}) {
   return reg({ el: l, sync() { i.checked = !!getp(S, k); }, vis: o.vis });
 }
 function cColorTr(kc, kt, label, o = {}) {
-  const w = el('div', 'rng'), c = el('input'), r = el('input'), out = el('output');
-  c.type = 'color'; r.type = 'range'; r.min = 0; r.max = 100; r.step = 1;
-  c.setAttribute('aria-label', label + ': color'); r.setAttribute('aria-label', label + ': transparencia');
+  const w = el('div', 'rng'), c = colorBtn(label + ': color', h => { setp(S, kc, h); changed(); }), r = el('input'), out = el('output');
+  r.type = 'range'; r.min = 0; r.max = 100; r.step = 1;
+  r.setAttribute('aria-label', label + ': transparencia');
   const upd = () => { out.textContent = r.value + '%'; };
-  c.addEventListener('input', () => { setp(S, kc, c.value); changed(); });
   r.addEventListener('input', () => { setp(S, kt, +r.value); upd(); changed(); });
   w.append(c, r, out);
-  return reg({ el: row(label, w), sync() { c.value = getp(S, kc); r.value = getp(S, kt); upd(); }, vis: o.vis });
+  return reg({ el: row(label, w), sync() { c.set(getp(S, kc)); r.value = getp(S, kt); upd(); }, vis: o.vis });
 }
 function cText(k, label) {
   const t = el('textarea'); t.rows = 2; t.spellcheck = false; t.setAttribute('aria-label', label);
@@ -847,9 +950,8 @@ function cGrad(k) {
     for (let i = 0; i < g.n; i++) {
       const c = g.colors[i], r = el('div', 'crow'), lab = el('div', 'lab'), po = el('span', null, 'posición ' + c.pos + '%'); posOut[i] = po;
       lab.append(el('span', null, 'Color ' + (i + 1)), po);
-      const ci = el('input'); ci.type = 'color'; ci.value = c.c; ci.setAttribute('aria-label', 'Color ' + (i + 1));
+      const ci = colorBtn('Color ' + (i + 1), h => { c.c = h; fill.style.background = barCss(); wrap.children[i + 1].style.background = h; changed(); }); ci.set(c.c);
       const w = el('div', 'rng'), ri = el('input'), ro = el('output'); ri.type = 'range'; ri.min = 0; ri.max = 100; ri.value = c.tr; ri.setAttribute('aria-label', 'Transparencia del color ' + (i + 1)); ro.textContent = c.tr + '%';
-      ci.addEventListener('input', () => { c.c = ci.value; fill.style.background = barCss(); wrap.children[i + 1].style.background = c.c; changed(); });
       ri.addEventListener('input', () => { c.tr = +ri.value; ro.textContent = c.tr + '%'; fill.style.background = barCss(); changed(); });
       w.append(ri, ro); r.append(lab, ci, w); root.append(r);
     }
@@ -1082,7 +1184,8 @@ function init() {
     a.href = URL.createObjectURL(b); a.download = `${slug}-tag-${Date.now()}.png`; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   });
   const dlg = $('#cfg');
-  $('#btnCfg').addEventListener('click', () => dlg.showModal());
+  $('#btnCfg').addEventListener('click', () => { lockBody(); dlg.showModal(); });
+  dlg.addEventListener('close', unlockBody);
   $('#cfgClose').addEventListener('click', () => dlg.close());
   const json = () => JSON.stringify({ version: 1, config: S }, null, 2);
   $('#cfgCopy').addEventListener('click', async () => { try { await navigator.clipboard.writeText(json()); toast('JSON copiado'); } catch (e) { toast('No se pudo copiar'); } });
