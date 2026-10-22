@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Generador de tags pixel art</title>
+<title>Generador de pixel art</title>
 <style>
 :root{
   --bg:#1c1c1e; --panel:#262628; --panel-2:#2e2e31; --line:#3b3b40;
@@ -421,7 +421,7 @@ const DEF = () => ({
   bol: { th: 1, asym: false, t: [1, 1, 1, 1], place: 'in', perSide: false, color: '#000000', tr: 50, sc: [sc('#000000', 50), sc('#000000', 50), sc('#000000', 50), sc('#000000', 50)], corner: false },
   emb: { th: 0, asym: false, t: [1, 1, 1, 1], place: 'in', custom: false, sc: [sc('#ffffff', 30), sc('#000000', 30), sc('#000000', 30), sc('#ffffff', 30)], corner: false },
   shape: { rad: 2, asym: false, r: [2, 2, 2, 2], chamfer: false, notch: [0, 0, 0, 0] },
-  ico: { spacing: 1, islands: false, compact: false, list: [] },
+  ico: { spacing: 1, islands: false, gap: 2, compact: false, list: [] },
   prev: { bg: 'checker', pin: true }
 });
 let S = DEF();
@@ -683,7 +683,7 @@ function render() {
   } else {
     let mc = textR; placed.forEach(p => { mc = rectU(mc, { x: p.x, y: p.y, w: p.ic.w, h: p.ic.h }); });
     const mb = padR(mc, pd); boxes.push(mb);
-    const pi = S.ico.compact ? [E, E, E, E] : pd, ig = E, gap = Math.max(0, sp);
+    const pi = S.ico.compact ? [E, E, E, E] : pd, ig = E, gap = Math.round(S.ico.gap * E);
     const isl = (list, side) => {
       if (!list.length) return;
       const gw = list.reduce((a, i) => a + i.w, 0) + ig * (list.length - 1), gh = Math.max(...list.map(i => i.h));
@@ -1114,8 +1114,9 @@ function buildUI() {
       ...SIDES.map((n, i) => cRange(`shape.notch.${i}`, 'Muesca: ' + n.toLowerCase(), 0, 10, 1))
     ]),
     sec('Iconos', [
-      cRange('ico.spacing', 'Espacio entre iconos y texto', -10, 10, 1),
-      cCheck('ico.islands', 'Islas de icono independientes'),
+      cRange('ico.spacing', 'Espacio entre iconos y texto', -10, 10, 1, { vis: () => !S.ico.islands }),
+      cCheck('ico.islands', 'Separar el icono del texto (isla propia)'),
+      cRange('ico.gap', 'Separación entre icono y texto', 0, 10, 1, { vis: () => S.ico.islands }),
       cCheck('ico.compact', 'Relleno compacto del icono', { vis: () => S.ico.islands }),
       cIcons()
     ])
